@@ -1,0 +1,2 @@
+export const ROLES = { ADMIN: 'admin', DOCTOR: 'doctor', NURSE: 'nurse', VIEWER: 'viewer' };
+export const homeFor = (role) => ({ admin: '/admin', doctor: '/doctor', nurse: '/nurse' }[role] || '/unauthorized');
