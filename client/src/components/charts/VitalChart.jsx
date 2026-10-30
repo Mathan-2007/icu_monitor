@@ -1,5 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { fmtTime } from '../../utils/formatters';
+import { buildDisplayVitals, stabilizeVitals } from '../../utils/vitals';
 
 const SERIES = [
   { key: 'heartRate', label: 'Heart Rate', color: '#ef4444', unit: 'bpm' },
@@ -11,9 +12,11 @@ const SERIES = [
 
 export default function VitalChart({ vitals, series = ['heartRate', 'spo2', 'systolic'], height = 260 }) {
   const active = SERIES.filter((s) => series.includes(s.key));
+  const chartData = stabilizeVitals(buildDisplayVitals(vitals, { minPoints: 60, windowMs: 5 * 60 * 1000, intervalMs: 5000 }));
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={vitals} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
+      <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
         <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
         <XAxis dataKey="timestamp" tickFormatter={fmtTime} stroke="#64748b" fontSize={11} minTickGap={40} />
         <YAxis stroke="#64748b" fontSize={11} />

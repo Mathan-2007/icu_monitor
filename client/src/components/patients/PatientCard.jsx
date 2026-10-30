@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import Badge from '../common/Badge';
 import { timeAgo, riskColor } from '../../utils/formatters';
+import { formatValue, formatVitalPair, getLatestVital } from '../../utils/vitals';
 
 const statusColor = { stable: 'green', serious: 'yellow', critical: 'red', discharged: 'slate' };
 
 export default function PatientCard({ patient }) {
-  const v = patient.latestVital || patient.vitalsSnapshot || {};
+  const v = getLatestVital([patient.latestVital || patient.vitalsSnapshot || {}]);
+  const bp = formatVitalPair(v.systolic, v.diastolic);
 
   return (
     <Link
@@ -26,19 +28,19 @@ export default function PatientCard({ patient }) {
 
       <div className="mb-3 grid grid-cols-4 gap-2 text-center">
         <div>
-          <div className="text-base font-bold text-red-700">{v.heartRate ?? '—'}</div>
+          <div className="text-base font-bold text-red-700">{formatValue(v.heartRate)}</div>
           <div className="text-[10px] uppercase tracking-wide text-slate-500">HR</div>
         </div>
         <div>
-          <div className="text-base font-bold text-sky-700">{v.spo2 ?? '—'}</div>
+          <div className="text-base font-bold text-sky-700">{formatValue(v.spo2)}</div>
           <div className="text-[10px] uppercase tracking-wide text-slate-500">SpO₂</div>
         </div>
         <div>
-          <div className="text-base font-bold text-violet-700">{v.systolic ?? '—'}/{v.diastolic ?? '—'}</div>
+          <div className="text-base font-bold text-violet-700">{bp}</div>
           <div className="text-[10px] uppercase tracking-wide text-slate-500">BP</div>
         </div>
         <div>
-          <div className="text-base font-bold text-amber-700">{v.temperature ?? '—'}</div>
+          <div className="text-base font-bold text-amber-700">{formatValue(v.temperature)}</div>
           <div className="text-[10px] uppercase tracking-wide text-slate-500">°C</div>
         </div>
       </div>

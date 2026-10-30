@@ -14,6 +14,7 @@ import Badge from '../../components/common/Badge';
 import DischargeModal from '../../components/patients/DischargeModal';
 import { useAuthStore } from '../../store/authStore';
 import { canDischarge } from '../../utils/permissions';
+import { buildDisplayVitals, getLatestVital, stabilizeVitals } from '../../utils/vitals';
 
 export default function PatientDetailPage() {
   const { id } = useParams();
@@ -51,7 +52,9 @@ export default function PatientDetailPage() {
   if (!current && loading) return <Loader label="Loading patient…" />;
   if (!current) return <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{error || 'Patient record unavailable.'}<button type="button" onClick={() => fetchPatient(id)} className="ml-3 font-semibold underline">Retry</button></div>;
   const p = current;
-  const latest = vitals[vitals.length - 1] || {};
+  const stableVitals = stabilizeVitals(buildDisplayVitals(vitals, { minPoints: 60, windowMs: 5 * 60 * 1000, intervalMs: 5000 }));
+  const latest = getLatestVital(stableVitals);
+  const bpValue = Number.isFinite(latest.systolic) && Number.isFinite(latest.diastolic) ? `${latest.systolic}/${latest.diastolic}` : '—';
 
   return (
     <div className="space-y-6">
@@ -74,8 +77,8 @@ export default function PatientDetailPage() {
         </div>
         <RiskGauge score={p.riskScore} level={p.riskLevel} />
         <div className="grid grid-cols-5 gap-4 text-center">
-          {[['❤️', latest.heartRate, 'HR'], ['🫁', latest.spo2, 'SpO₂'], ['🩸', `${latest.systolic}/${latest.diastolic}`, 'BP'],
-            ['🌡️', latest.temperature, '°C'], ['😮‍💨', latest.respiratoryRate, 'RR']].map(([icon, val, label], i) => (
+          {[['❤️', latest.heartRate ?? '—', 'HR'], ['🫁', latest.spo2 ?? '—', 'SpO₂'], ['🩸', bpValue, 'BP'],
+            ['🌡️', latest.temperature ?? '—', '°C'], ['😮‍💨', latest.respiratoryRate ?? '—', 'RR']].map(([icon, val, label], i) => (
             <div key={i}>
               <div className="text-2xl">{icon}</div>
               <div className="text-xl font-bold">{val ?? '—'}</div>
@@ -88,8 +91,8 @@ export default function PatientDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
-            <h2 className="font-semibold mb-3">📈 Vitals Trend (last {vitals.length} readings)</h2>
-            <VitalChart vitals={vitals} />
+            <h2 className="font-semibold mb-3">📈 Vitals Trend (last {stableVitals.length} readings)</h2>
+            <VitalChart vitals={stableVitals} />
           </div>
           <AiSummaryCard patient={p} />
           <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5">
